@@ -72,23 +72,27 @@ resource "aws_eip" "webapi_eip" {
 # CloudFront Distribution
 resource "aws_cloudfront_distribution" "webapi_cf" {
   origin {
-    domain_name = aws_eip.webapi_eip.public_ip
+    domain_name = aws_eip.webapi_eip.public_ip # Replace with your actual domain name
     origin_id   = "webapi-origin"
 
     custom_origin_config {
-      http_port                = 80
-      https_port               = 443
-      origin_protocol_policy   = "http-only"
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
       origin_ssl_protocols     = ["TLSv1.2"]
     }
   }
 
   enabled             = true
   is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "webapi-origin"
+    target_origin_id       = "webapi-origin"
+    viewer_protocol_policy = "redirect-to-https"
+
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods  = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -97,7 +101,9 @@ resource "aws_cloudfront_distribution" "webapi_cf" {
       }
     }
 
-    viewer_protocol_policy = "redirect-to-https"
+    min_ttl     = 0
+    default_ttl = 3600
+    max_ttl     = 86400
   }
 
   restrictions {
@@ -111,6 +117,6 @@ resource "aws_cloudfront_distribution" "webapi_cf" {
   }
 
   tags = {
-    Name = "WebAPI-Demo-CloudFront"
+    Environment = "Demo"
   }
 }
